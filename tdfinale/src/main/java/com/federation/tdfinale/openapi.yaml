@@ -1,0 +1,809 @@
+openapi: 3.1.0
+info:
+  title: Agricultural federation API
+  version: 1.0.0
+  description: |
+    OpenAPI specification for the agricultural federation assignment.
+    Coverage of the subject:
+    - A: opening a new collectivity
+    - B and B-2: admitting a member, transfer, resignation, stricter sponsorship rules
+    - C: contributions and payments
+    - D: treasury accounts
+    - E: activities
+    - F: attendance tracking
+    - G: collectivity statistics
+    - H: federation statistics
+    Current Java implementation in this repository is mainly advanced on collectivities and members.
+    The specification below documents the complete target contract expected by the subject.
+servers:
+  - url: https://localhost:8080
+paths:
+  /collectivities:
+    get:
+      summary: List collectivities
+      tags: [Collectivities]
+      responses:
+        '200':
+          description: List of collectivities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Collectivity'
+    post:
+      summary: Open new collectivities
+      tags: [Collectivities]
+      description: Implements subject A.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreateCollectivity'
+      responses:
+        '201':
+          description: Created collectivities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Collectivity'
+        '400':
+          description: Validation error
+        '404':
+          description: Member not found
+  /members:
+    get:
+      summary: List members
+      tags: [Members]
+      responses:
+        '200':
+          description: List of members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Member'
+    post:
+      summary: Admit new members
+      tags: [Members]
+      description: Implements subject B and B-2.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreateMember'
+      responses:
+        '201':
+          description: Created members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Member'
+        '400':
+          description: Invalid sponsorship or payment data
+        '404':
+          description: Collectivity or referee not found
+  /member-transfers:
+    post:
+      summary: Transfer a member to another collectivity
+      tags: [Members]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberTransfer'
+      responses:
+        '201':
+          description: Transfer registered
+        '404':
+          description: Member or collectivity not found
+  /resignations:
+    post:
+      summary: Register member resignation
+      tags: [Members]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberResignation'
+      responses:
+        '201':
+          description: Resignation registered
+        '404':
+          description: Member not found
+  /contributions:
+    post:
+      summary: Register contribution payment
+      tags: [Contributions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContribution'
+      responses:
+        '201':
+          description: Contribution registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contribution'
+        '400':
+          description: Invalid amount, period, or payment mode
+        '404':
+          description: Member, collectivity, or account not found
+    get:
+      summary: List contributions
+      tags: [Contributions]
+      parameters:
+        - in: query
+          name: memberId
+          schema:
+            type: string
+        - in: query
+          name: collectivityId
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of contributions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contribution'
+  /accounts:
+    post:
+      summary: Create treasury account
+      tags: [Treasury]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccount'
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: Invalid account data or duplicate cash account
+    get:
+      summary: List treasury accounts
+      tags: [Treasury]
+      parameters:
+        - in: query
+          name: ownerType
+          schema:
+            $ref: '#/components/schemas/OwnerType'
+        - in: query
+          name: ownerId
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+  /activities:
+    post:
+      summary: Create activity
+      tags: [Activities]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateActivity'
+      responses:
+        '201':
+          description: Activity created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+        '400':
+          description: Invalid activity data
+    get:
+      summary: List activities
+      tags: [Activities]
+      parameters:
+        - in: query
+          name: collectivityId
+          schema:
+            type: string
+        - in: query
+          name: federationLevel
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Activity'
+  /activities/{activityId}/attendance:
+    post:
+      summary: Record attendance sheet
+      tags: [Attendance]
+      parameters:
+        - in: path
+          name: activityId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordAttendanceRequest'
+      responses:
+        '201':
+          description: Attendance recorded
+        '404':
+          description: Activity or member not found
+  /collectivities/{collectivityId}/statistics:
+    get:
+      summary: Get collectivity statistics
+      tags: [Statistics]
+      parameters:
+        - in: path
+          name: collectivityId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: startDate
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Collectivity statistics report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectivityStatistics'
+        '404':
+          description: Collectivity not found
+  /federation/statistics:
+    get:
+      summary: Get federation statistics
+      tags: [Statistics]
+      parameters:
+        - in: query
+          name: startDate
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Federation statistics report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FederationStatistics'
+components:
+  schemas:
+    MemberIdentifier:
+      type: string
+    CreateCollectivity:
+      type: object
+      required:
+        - name
+        - location
+        - specialty
+        - members
+        - federationApproval
+        - structure
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+        specialty:
+          type: string
+        members:
+          type: array
+          minItems: 10
+          items:
+            $ref: '#/components/schemas/MemberIdentifier'
+        federationApproval:
+          type: boolean
+        structure:
+          $ref: '#/components/schemas/CreateCollectivityStructure'
+    CreateCollectivityStructure:
+      type: object
+      required:
+        - president
+        - vicePresident
+        - treasurer
+        - secretary
+      properties:
+        president:
+          $ref: '#/components/schemas/MemberIdentifier'
+        vicePresident:
+          $ref: '#/components/schemas/MemberIdentifier'
+        treasurer:
+          $ref: '#/components/schemas/MemberIdentifier'
+        secretary:
+          $ref: '#/components/schemas/MemberIdentifier'
+    CollectivityStructure:
+      type: object
+      properties:
+        president:
+          $ref: '#/components/schemas/Member'
+        vicePresident:
+          $ref: '#/components/schemas/Member'
+        treasurer:
+          $ref: '#/components/schemas/Member'
+        secretary:
+          $ref: '#/components/schemas/Member'
+    Collectivity:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        location:
+          type: string
+        specialty:
+          type: string
+        creationDate:
+          type: string
+          format: date
+        structure:
+          $ref: '#/components/schemas/CollectivityStructure'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
+    MemberInformation:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - birthDate
+        - gender
+        - address
+        - profession
+        - phoneNumber
+        - email
+        - occupation
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        gender:
+          $ref: '#/components/schemas/Gender'
+        address:
+          type: string
+        profession:
+          type: string
+        phoneNumber:
+          type: integer
+        email:
+          type: string
+        occupation:
+          $ref: '#/components/schemas/MemberOccupation'
+    CreateMember:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/MemberInformation'
+      required:
+        - collectivityIdentifier
+        - referees
+        - refereeRelationshipNature
+        - registrationFeePaid
+        - membershipDuesPaid
+      properties:
+        collectivityIdentifier:
+          type: string
+        referees:
+          type: array
+          minItems: 2
+          items:
+            $ref: '#/components/schemas/MemberIdentifier'
+        refereeRelationshipNature:
+          type: object
+          additionalProperties:
+            type: string
+          description: Maps each referee identifier to the relationship nature such as family, friend, or colleague.
+        registrationFeePaid:
+          type: boolean
+        membershipDuesPaid:
+          type: boolean
+    Member:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/MemberInformation'
+      properties:
+        id:
+          $ref: '#/components/schemas/MemberIdentifier'
+        adhesionDate:
+          type: string
+          format: date
+        referees:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
+    MemberTransfer:
+      type: object
+      required:
+        - memberId
+        - targetCollectivityId
+        - transferDate
+      properties:
+        memberId:
+          type: string
+        targetCollectivityId:
+          type: string
+        transferDate:
+          type: string
+          format: date
+        reason:
+          type: string
+    MemberResignation:
+      type: object
+      required:
+        - memberId
+        - resignationDate
+      properties:
+        memberId:
+          type: string
+        resignationDate:
+          type: string
+          format: date
+        reason:
+          type: string
+    CreateContribution:
+      type: object
+      required:
+        - memberId
+        - collectivityId
+        - amount
+        - contributionType
+        - paymentMode
+        - paymentDate
+      properties:
+        memberId:
+          type: string
+        collectivityId:
+          type: string
+        amount:
+          type: number
+          format: double
+        contributionType:
+          $ref: '#/components/schemas/ContributionType'
+        periodType:
+          $ref: '#/components/schemas/ContributionPeriodType'
+        label:
+          type: string
+        paymentMode:
+          $ref: '#/components/schemas/PaymentMode'
+        paymentDate:
+          type: string
+          format: date
+        treasuryAccountId:
+          type: string
+    Contribution:
+      type: object
+      properties:
+        id:
+          type: string
+        memberId:
+          type: string
+        collectivityId:
+          type: string
+        amount:
+          type: number
+          format: double
+        contributionType:
+          $ref: '#/components/schemas/ContributionType'
+        periodType:
+          $ref: '#/components/schemas/ContributionPeriodType'
+        paymentMode:
+          $ref: '#/components/schemas/PaymentMode'
+        paymentDate:
+          type: string
+          format: date
+        treasuryAccountId:
+          type: string
+    CreateAccount:
+      type: object
+      required:
+        - ownerType
+        - ownerId
+        - accountType
+        - holderName
+      properties:
+        ownerType:
+          $ref: '#/components/schemas/OwnerType'
+        ownerId:
+          type: string
+        accountType:
+          $ref: '#/components/schemas/AccountType'
+        holderName:
+          type: string
+        bankName:
+          $ref: '#/components/schemas/BankName'
+        bankAccountNumber:
+          type: string
+          pattern: '^\\d{23}$'
+        mobileMoneyService:
+          $ref: '#/components/schemas/MobileMoneyService'
+        mobilePhoneNumber:
+          type: string
+        openingBalance:
+          type: number
+          format: double
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+        ownerType:
+          $ref: '#/components/schemas/OwnerType'
+        ownerId:
+          type: string
+        accountType:
+          $ref: '#/components/schemas/AccountType'
+        holderName:
+          type: string
+        bankName:
+          $ref: '#/components/schemas/BankName'
+        bankAccountNumber:
+          type: string
+        mobileMoneyService:
+          $ref: '#/components/schemas/MobileMoneyService'
+        mobilePhoneNumber:
+          type: string
+        balance:
+          type: number
+          format: double
+        currency:
+          type: string
+          default: MGA
+    CreateActivity:
+      type: object
+      required:
+        - title
+        - activityType
+        - activityDate
+        - mandatory
+      properties:
+        organizerType:
+          $ref: '#/components/schemas/OwnerType'
+        organizerId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        activityType:
+          $ref: '#/components/schemas/ActivityType'
+        activityDate:
+          type: string
+          format: date
+        mandatory:
+          type: boolean
+        targetOccupation:
+          $ref: '#/components/schemas/MemberOccupation'
+    Activity:
+      type: object
+      properties:
+        id:
+          type: string
+        organizerType:
+          $ref: '#/components/schemas/OwnerType'
+        organizerId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        activityType:
+          $ref: '#/components/schemas/ActivityType'
+        activityDate:
+          type: string
+          format: date
+        mandatory:
+          type: boolean
+        targetOccupation:
+          $ref: '#/components/schemas/MemberOccupation'
+    RecordAttendanceRequest:
+      type: object
+      required:
+        - entries
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendanceEntry'
+    AttendanceEntry:
+      type: object
+      required:
+        - memberId
+        - status
+      properties:
+        memberId:
+          type: string
+        status:
+          $ref: '#/components/schemas/AttendanceStatus'
+        excuse:
+          type: string
+        externalCollectivityId:
+          type: string
+          description: Present only when the attendee comes from another collectivity.
+    CollectivityStatistics:
+      type: object
+      properties:
+        collectivityId:
+          type: string
+        memberCount:
+          type: integer
+        globalAttendanceRate:
+          type: number
+          format: double
+        memberStatistics:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberStatistics'
+    MemberStatistics:
+      type: object
+      properties:
+        memberId:
+          type: string
+        attendanceRate:
+          type: number
+          format: double
+        collectedAmount:
+          type: number
+          format: double
+        unpaidAmount:
+          type: number
+          format: double
+    FederationStatistics:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        collectivities:
+          type: array
+          items:
+            $ref: '#/components/schemas/FederationCollectivityStatistics'
+    FederationCollectivityStatistics:
+      type: object
+      properties:
+        collectivityId:
+          type: string
+        collectivityName:
+          type: string
+        globalAttendanceRate:
+          type: number
+          format: double
+        upToDateContributionRate:
+          type: number
+          format: double
+        newMembersCount:
+          type: integer
+    Gender:
+      type: string
+      enum:
+        - MALE
+        - FEMALE
+    MemberOccupation:
+      type: string
+      enum:
+        - JUNIOR
+        - SENIOR
+        - SECRETARY
+        - TREASURER
+        - VICE_PRESIDENT
+        - PRESIDENT
+    ContributionType:
+      type: string
+      enum:
+        - PERIODIC
+        - EXCEPTIONAL
+    ContributionPeriodType:
+      type: string
+      enum:
+        - MONTHLY
+        - YEARLY
+    PaymentMode:
+      type: string
+      enum:
+        - CASH
+        - BANK_TRANSFER
+        - MOBILE_MONEY
+    OwnerType:
+      type: string
+      enum:
+        - COLLECTIVITY
+        - FEDERATION
+    AccountType:
+      type: string
+      enum:
+        - CASH
+        - BANK
+        - MOBILE_MONEY
+    BankName:
+      type: string
+      enum:
+        - BRED
+        - MCB
+        - BMOI
+        - BOA
+        - BGFI
+        - AFG
+        - ACCES_BANQUE
+        - BAOBAB
+        - SIPEM
+    MobileMoneyService:
+      type: string
+      enum:
+        - ORANGE_MONEY
+        - MVOLA
+        - AIRTEL_MONEY
+    ActivityType:
+      type: string
+      enum:
+        - MONTHLY_GENERAL_ASSEMBLY
+        - JUNIOR_MANDATORY_TRAINING
+        - EXCEPTIONAL_COLLECTIVITY_ACTIVITY
+        - FEDERATION_ACTIVITY
+    AttendanceStatus:
+      type: string
+      enum:
+        - PRESENT
+        - EXCUSED
+        - ABSENT
