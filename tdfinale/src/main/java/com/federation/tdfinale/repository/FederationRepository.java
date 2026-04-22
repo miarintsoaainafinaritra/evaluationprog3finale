@@ -58,13 +58,13 @@ public class FederationRepository {
     public Collectivity saveCollectivity(Collectivity c) {
         if (c.getId() == null) c.setId("C" + cId.getAndIncrement());
 
-        Integer existing = jdbc.queryForObject(
+        int existing = jdbc.queryForObject(
             "SELECT COUNT(*) FROM collectivity WHERE id = ?",
             Integer.class,
             c.getId()
         );
 
-        if (existing != null && existing > 0) {
+        if (existing > 0) {
             jdbc.update(
                 "UPDATE collectivity SET name = ?, location = ?, specialty = ?, creation_date = ?, president_id = ?, vice_president_id = ?, treasurer_id = ?, secretary_id = ? WHERE id = ?",
                 c.getName(), c.getLocation(), c.getSpecialty(), c.getCreationDate(),
@@ -129,7 +129,7 @@ public class FederationRepository {
         return members;
     }
 
-    private class MemberRowMapper implements RowMapper<Member> {
+    private static class MemberRowMapper implements RowMapper<Member> {
         @Override
         public Member mapRow(ResultSet rs, int rowNum) throws SQLException {
             Member m = new Member();
