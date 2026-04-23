@@ -14,3 +14,4 @@ public class CollectivityStructure {
     private Member secretary;
 }
 
+
