@@ -1,0 +1,343 @@
+openapi: 3.1.0
+info:
+  description: "# Versioning\nThis API uses semantic versioning (MAJOR.MINOR.PATCH).\
+    \ Available versions are : \n- v0.0.1 (2026-04-21) : POST /collectivities for\
+    \ collectivities creation and POST /members for members creation.\n- v0.0.2 (2026-04-22)\
+    \ : POST /collectivities/{id}/assign-identity for assigning official number and\
+    \ unique name to a collectivity.\n"
+  title: Agricultural federation API
+  version: 0.0.2
+servers:
+- url: https://localhost:8080
+paths:
+  /collectivities:
+    post:
+      description: "During collectivity request body creation, only members ID are\
+        \ provided to identify members. \nBut the response content includes members\
+        \ information, not only their IDs.\n"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: '#/components/schemas/CreateCollectivity'
+              type: array
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Collectivity'
+                type: array
+          description: List of created collectivities
+        "400":
+          description: Collectivity without federation approval or structure missing.
+        "404":
+          description: Member not found.
+      summary: Create list of collectivities
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+  /members:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: '#/components/schemas/CreateMember'
+              type: array
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Member'
+                type: array
+          description: List of created members
+        "400":
+          description: "The following case must return a bad request exception : \n\
+            - Member with bad referees or without proper payment.\n- Membership dues\
+            \ not paid or registration fee not paid.\n"
+        "404":
+          description: Either collectivity or member not found.
+      summary: Create list of members
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+  /collectivities/{id}/assign-identity:
+    post:
+      description: |
+        Allows the federation to assign an official number and a unique name to a collectivity.
+        Once assigned, the official number and unique name cannot be modified.
+      operationId: assignCollectivityIdentity
+      parameters:
+      - description: Technical identifier of the collectivity
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectivityIdentityAssignment'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collectivity'
+          description: Official number and unique name assigned successfully
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing official number or unique name
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Collectivity not found
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unique name or official number already exists
+        "410":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Collectivity already has an assigned number or name
+      summary: Assign official number and unique name to a collectivity
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+components:
+  schemas:
+    CollectivityIdentityAssignment:
+      example:
+        uniqueName: uniqueName
+        officialNumber: officialNumber
+      properties:
+        officialNumber:
+          description: Official number assigned by the federation
+          type: string
+        uniqueName:
+          description: Unique name of the collectivity
+          type: string
+      required:
+      - officialNumber
+      - uniqueName
+    ErrorResponse:
+      example:
+        message: message
+        status: 0
+        timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        timestamp:
+          format: date-time
+          type: string
+    CreateCollectivity:
+      example:
+        federationApproval: true
+        members:
+        - null
+        - null
+        location: location
+        structure:
+          secretary: secretary
+          vicePresident: vicePresident
+          treasurer: treasurer
+          president: president
+      properties:
+        location:
+          type: string
+        members:
+          items:
+            $ref: '#/components/schemas/MemberIdentifier'
+          type: array
+        federationApproval:
+          type: boolean
+        structure:
+          $ref: '#/components/schemas/CreateCollectivityStructure'
+    CreateCollectivityStructure:
+      example:
+        secretary: secretary
+        vicePresident: vicePresident
+        treasurer: treasurer
+        president: president
+      properties:
+        president:
+          type: string
+        vicePresident:
+          type: string
+        treasurer:
+          type: string
+        secretary:
+          type: string
+    CollectivityStructure:
+      example:
+        secretary:
+          id: id
+          referees:
+          - null
+          - null
+        vicePresident:
+          id: id
+          referees:
+          - null
+          - null
+        treasurer:
+          id: id
+          referees:
+          - null
+          - null
+        president:
+          id: id
+          referees:
+          - null
+          - null
+      properties:
+        president:
+          $ref: '#/components/schemas/Member'
+        vicePresident:
+          $ref: '#/components/schemas/Member'
+        treasurer:
+          $ref: '#/components/schemas/Member'
+        secretary:
+          $ref: '#/components/schemas/Member'
+    Collectivity:
+      example:
+        uniqueName: uniqueName
+        members:
+        - id: id
+          referees:
+          - null
+          - null
+        - id: id
+          referees:
+          - null
+          - null
+        officialNumber: officialNumber
+        location: location
+        id: id
+        structure:
+          secretary:
+            id: id
+            referees:
+            - null
+            - null
+          vicePresident:
+            id: id
+            referees:
+            - null
+            - null
+          treasurer:
+            id: id
+            referees:
+            - null
+            - null
+          president:
+            id: id
+            referees:
+            - null
+            - null
+      properties:
+        id:
+          type: string
+        officialNumber:
+          type: string
+        uniqueName:
+          type: string
+        location:
+          type: string
+        structure:
+          $ref: '#/components/schemas/CollectivityStructure'
+        members:
+          items:
+            $ref: '#/components/schemas/Member'
+          type: array
+    MemberIdentifier:
+      type: string
+    CreateMember:
+      allOf:
+      - $ref: '#/components/schemas/MemberInformation'
+      example:
+        collectivityIdentifier: collectivityIdentifier
+        membershipDuesPaid: true
+        registrationFeePaid: true
+        referees:
+        - null
+        - null
+      properties:
+        collectivityIdentifier: {}
+        referees:
+          items:
+            $ref: '#/components/schemas/MemberIdentifier'
+        registrationFeePaid: {}
+        membershipDuesPaid: {}
+    MemberInformation:
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        birthDate:
+          format: date
+          type: string
+        gender:
+          $ref: '#/components/schemas/Gender'
+        address:
+          type: string
+        profession:
+          type: string
+        phoneNumber:
+          type: integer
+        email:
+          type: string
+        occupation:
+          $ref: '#/components/schemas/MemberOccupation'
+    Member:
+      allOf:
+      - $ref: '#/components/schemas/MemberInformation'
+      example:
+        id: id
+        referees:
+        - null
+        - null
+      properties:
+        id:
+          type: string
+        referees:
+          items:
+            $ref: '#/components/schemas/Member'
+    Gender:
+      enum:
+      - MALE
+      - FEMALE
+      type: string
+    MemberOccupation:
+      enum:
+      - JUNIOR
+      - SENIOR
+      - SECRETARY
+      - TREASURER
+      - VICE_PRESIDENT
+      - PRESIDENT
+      type: string
+
