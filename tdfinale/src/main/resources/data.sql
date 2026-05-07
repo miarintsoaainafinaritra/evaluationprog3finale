@@ -56,16 +56,15 @@ INSERT INTO collectivity_member (id, member_id, collectivity_id) VALUES
 
 UPDATE collectivity SET president_id = 'C3-M1', vice_president_id = 'C3-M2', treasurer_id = 'C3-M4', secretary_id = 'C3-M3' WHERE id = 'col-3';
 
-
 INSERT INTO financial_account (id, collectivity_id, type, amount, holder_name, phone_number, bank_name, bank_code, branch_code, account_number, rib_key) VALUES 
-('C1-A-CASH', 'col-1', 'CASH', 0, '-', '-', NULL, NULL, NULL, NULL, NULL),
-('C1-A-MOBILE-1', 'col-1', 'MOBILE_BANKING', 0, 'Mpanorina', '0370489612', 'ORANGE_MONEY', NULL, NULL, NULL, NULL),
-('C2-A-CASH', 'col-2', 'CASH', 0, '-', '-', NULL, NULL, NULL, NULL, NULL),
-('C2-A-MOBILE-1', 'col-2', 'MOBILE_BANKING', 0, 'Dobo voalohany', '0320489612', 'ORANGE_MONEY', NULL, NULL, NULL, NULL),
-('C3-A-CASH', 'col-3', 'CASH', 0, '-', '-', NULL, NULL, NULL, NULL, NULL),
-('C3-A-BANK-1', 'col-3', 'BANK_TRANSFER', 0, 'Kolo', NULL, 'BMOI', '00004', '00001', '123456789012', '12'),
-('C3-A-BANK-2', 'col-3', 'BANK_TRANSFER', 0, 'Naivo', NULL, 'BRED', '00008', '00003', '456789012358', '58'),
-('C3-A-MOBILE-1', 'col-3', 'MOBILE_BANKING', 0, 'Koto', '0341889612', 'MVOLA', NULL, NULL, NULL, NULL);
+('C1-A-CASH', 'col-1', 'CASH', 650000, '-', '-', NULL, NULL, NULL, NULL, NULL),
+('C1-A-MOBILE-1', 'col-1', 'MOBILE_BANKING', 550000, 'Mpanorina', '0370489612', 'ORANGE_MONEY', NULL, NULL, NULL, NULL),
+('C2-A-CASH', 'col-2', 'CASH', 1100000, '-', '-', NULL, NULL, NULL, NULL, NULL),
+('C2-A-MOBILE-1', 'col-2', 'MOBILE_BANKING', 200000, 'Dobo voalohany', '0320489612', 'ORANGE_MONEY', NULL, NULL, NULL, NULL),
+('C3-A-CASH', 'col-3', 'CASH', 60000, '-', '-', NULL, NULL, NULL, NULL, NULL),
+('C3-A-BANK-1', 'col-3', 'BANK_TRANSFER', 150000, 'Kolo', NULL, 'BMOI', '00004', '00001', '1234567890', '12'),
+('C3-A-BANK-2', 'col-3', 'BANK_TRANSFER', 95000, 'Naivo', NULL, 'BRED', '00008', '00003', '4567890123', '58'),
+('C3-A-MOBILE-1', 'col-3', 'MOBILE_BANKING', 30000, 'Koto', '0341889612', 'MVOLA', NULL, NULL, NULL, NULL);
 
 
 INSERT INTO membership_fee (id, collectivity_id, label, active, frequency, eligible_from, amount) VALUES 
