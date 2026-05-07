@@ -33,4 +33,31 @@ public class CollectivityRepository {
         }
         return l;
     }
+
+    public void save(Collectivity c) {
+        try (Connection con = ds.getConnection(); PreparedStatement ps = con.prepareStatement("INSERT INTO collectivity (id, name, number, location, specialization, president_id, vice_president_id, treasurer_id, secretary_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+            ps.setString(1, c.getId()); ps.setString(2, c.getName()); ps.setInt(3, c.getNumber());
+            ps.setString(4, c.getLocation()); ps.setString(5, c.getSpecialization());
+            ps.setString(6, c.getPresidentId()); ps.setString(7, c.getVicePresidentId());
+            ps.setString(8, c.getTreasurerId()); ps.setString(9, c.getSecretaryId());
+            ps.executeUpdate();
+        } catch (Exception e) { 
+            log.error("Erreur lors de la création de la collectivité: {}", c.getId(), e);
+            throw new RuntimeException(e); 
+        }
+    }
+
+    public void update(Collectivity c) {
+        try (Connection con = ds.getConnection(); PreparedStatement ps = con.prepareStatement("UPDATE collectivity SET name=?, number=?, location=?, specialization=?, president_id=?, vice_president_id=?, treasurer_id=?, secretary_id=? WHERE id=?")) {
+            ps.setString(1, c.getName()); ps.setInt(2, c.getNumber());
+            ps.setString(3, c.getLocation()); ps.setString(4, c.getSpecialization());
+            ps.setString(5, c.getPresidentId()); ps.setString(6, c.getVicePresidentId());
+            ps.setString(7, c.getTreasurerId()); ps.setString(8, c.getSecretaryId());
+            ps.setString(9, c.getId());
+            ps.executeUpdate();
+        } catch (Exception e) { 
+            log.error("Erreur lors de la mise à jour de la collectivité: {}", c.getId(), e);
+            throw new RuntimeException(e); 
+        }
+    }
 }
