@@ -44,6 +44,35 @@ public class MemberRepository {
         } catch (Exception e) { throw new RuntimeException(e); }
         return l;
     }
+    public void save(Member m) {
+        try (Connection c = ds.getConnection(); PreparedStatement ps = c.prepareStatement("INSERT INTO member (id, first_name, last_name, birth_date, gender, address, profession, phone_number, email, occupation, membership_date, registration_fee_paid, membership_dues_paid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+            ps.setString(1, m.getId()); ps.setString(2, m.getFirstName()); ps.setString(3, m.getLastName());
+            ps.setDate(4, m.getBirthDate() != null ? java.sql.Date.valueOf(m.getBirthDate()) : null);
+            ps.setString(5, m.getGender()); ps.setString(6, m.getAddress()); ps.setString(7, m.getProfession());
+            ps.setString(8, m.getPhoneNumber()); ps.setString(9, m.getEmail()); ps.setString(10, m.getOccupation());
+            ps.setDate(11, m.getMembershipDate() != null ? java.sql.Date.valueOf(m.getMembershipDate()) : null);
+            ps.setBoolean(12, m.isRegistrationFeePaid()); ps.setBoolean(13, m.isMembershipDuesPaid());
+            ps.executeUpdate();
+        } catch (Exception e) { 
+            log.error("Erreur lors de la création du membre: {}", m.getId(), e);
+            throw new RuntimeException(e); 
+        }
+    }
+    public void update(Member m) {
+        try (Connection c = ds.getConnection(); PreparedStatement ps = c.prepareStatement("UPDATE member SET first_name=?, last_name=?, birth_date=?, gender=?, address=?, profession=?, phone_number=?, email=?, occupation=?, membership_date=?, registration_fee_paid=?, membership_dues_paid=? WHERE id=?")) {
+            ps.setString(1, m.getFirstName()); ps.setString(2, m.getLastName());
+            ps.setDate(3, m.getBirthDate() != null ? java.sql.Date.valueOf(m.getBirthDate()) : null);
+            ps.setString(4, m.getGender()); ps.setString(5, m.getAddress()); ps.setString(6, m.getProfession());
+            ps.setString(7, m.getPhoneNumber()); ps.setString(8, m.getEmail()); ps.setString(10, m.getOccupation());
+            ps.setDate(10, m.getMembershipDate() != null ? java.sql.Date.valueOf(m.getMembershipDate()) : null);
+            ps.setBoolean(11, m.isRegistrationFeePaid()); ps.setBoolean(12, m.isMembershipDuesPaid());
+            ps.setString(13, m.getId());
+            ps.executeUpdate();
+        } catch (Exception e) { 
+            log.error("Erreur lors de la mise à jour du membre: {}", m.getId(), e);
+            throw new RuntimeException(e); 
+        }
+    }
     private Member map(ResultSet rs) throws SQLException {
         Member m = new Member();
         m.setId(rs.getString("id")); m.setFirstName(rs.getString("first_name")); m.setLastName(rs.getString("last_name"));
