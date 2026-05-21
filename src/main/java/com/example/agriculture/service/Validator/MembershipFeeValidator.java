@@ -1,0 +1,44 @@
+package com.example.agriculture.service.Validator;
+
+import com.example.agriculture.Exception.BadRequestException;
+import com.example.agriculture.Model.CreateMembershipFee;
+import java.util.List;
+import org.springframework.stereotype.Component;
+
+@Component
+public class MembershipFeeValidator {
+
+    public void validateAll(List<CreateMembershipFee> fees) {
+        int i;
+
+        if (fees == null || fees.isEmpty()) {
+            throw new BadRequestException("Membership fees are required");
+        }
+
+        for (i = 0; i < fees.size(); i++) {
+            validate(fees.get(i));
+        }
+    }
+
+    private void validate(CreateMembershipFee fee) {
+        if (fee == null) {
+            throw new BadRequestException("Membership fee is required");
+        }
+
+        if (fee.getEligibleFrom() == null) {
+            throw new BadRequestException("eligibleFrom is required");
+        }
+
+        if (fee.getFrequency() == null) {
+            throw new BadRequestException("frequency is required");
+        }
+
+        if (fee.getAmount() < 0) {
+            throw new BadRequestException("amount must be greater than or equal to 0");
+        }
+
+        if (fee.getLabel() == null || fee.getLabel().trim().isEmpty()) {
+            throw new BadRequestException("label is required");
+        }
+    }
+}

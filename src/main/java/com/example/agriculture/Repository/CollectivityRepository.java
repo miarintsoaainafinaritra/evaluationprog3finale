@@ -1,0 +1,14 @@
+package com.example.agriculture.Repository;
+
+import com.example.agriculture.Model.Collectivity;
+
+public interface CollectivityRepository {
+    Collectivity findById(String id);
+    Collectivity findByName(String name);
+    Collectivity findByNumber(Integer number);
+    Collectivity save(Collectivity collectivity);
+
+    boolean existsByNumber(String number);
+
+    boolean existsByName(String name);
+}
