@@ -11,10 +11,7 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import javax.sql.DataSource;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,8 +23,10 @@ class FederationServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Create fresh embedded database for each test to avoid ID conflicts
         dataSource = new EmbeddedDatabaseBuilder()
             .setType(EmbeddedDatabaseType.H2)
+            .generateUniqueName(true)
             .addScript("classpath:schema.sql")
             .build();
         repo = new FederationRepository(new JdbcTemplate(dataSource));
@@ -54,20 +53,21 @@ class FederationServiceTest {
 
     @Test
     void createMember_ShouldSucceed_WithCorrectSponsors() {
-        Member m1 = new Member("M1", "John", "Doe", LocalDate.of(1990, 1, 1), Gender.MALE, "Addr", "Dev", 123, "a@b.com", MemberOccupation.SENIOR, LocalDate.now().minusMonths(7), Collections.emptyList());
-        Member m2 = new Member("M2", "Jane", "Doe", LocalDate.of(1990, 1, 1), Gender.FEMALE, "Addr", "Dev", 456, "c@d.com", MemberOccupation.SENIOR, LocalDate.now().minusMonths(7), Collections.emptyList());
-        repo.saveMember(m1);
-        repo.saveMember(m2);
+        // Let the repository auto-generate IDs by setting them to null
+        Member m1 = new Member(null, "John", "Doe", LocalDate.of(1990, 1, 1), Gender.MALE, "Addr", "Dev", 123, "a@b.com", MemberOccupation.SENIOR, LocalDate.now().minusMonths(7), Collections.emptyList());
+        Member m2 = new Member(null, "Jane", "Doe", LocalDate.of(1990, 1, 1), Gender.FEMALE, "Addr", "Dev", 456, "c@d.com", MemberOccupation.SENIOR, LocalDate.now().minusMonths(7), Collections.emptyList());
+        m1 = repo.saveMember(m1);
+        m2 = repo.saveMember(m2);
 
         List<String> memberIds = new ArrayList<>();
         for(int i=0; i<10; i++) {
-            Member m = new Member("MX"+i, "M", "X", LocalDate.now(), Gender.MALE, "A", "P", 1, "e", MemberOccupation.SENIOR, LocalDate.now().minusMonths(7), Collections.emptyList());
-            repo.saveMember(m);
+            Member m = new Member(null, "M", "X", LocalDate.now(), Gender.MALE, "A", "P", 1, "e", MemberOccupation.SENIOR, LocalDate.now().minusMonths(7), Collections.emptyList());
+            m = repo.saveMember(m);
             memberIds.add(m.getId());
         }
 
         CreateCollectivityStructure struct = new CreateCollectivityStructure(memberIds.get(0), memberIds.get(1), memberIds.get(2), memberIds.get(3));
-        CreateCollectivity cReq = new CreateCollectivity("C1", "Tana", "Riziculture", memberIds, true, struct);
+        CreateCollectivity cReq = new CreateCollectivity(null, "Tana", "Riziculture", memberIds, true, struct);
         Collectivity c = service.createCollectivities(Collections.singletonList(cReq)).get(0);
 
         CreateMember mReq = new CreateMember();
